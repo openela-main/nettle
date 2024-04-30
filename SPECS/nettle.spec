@@ -14,8 +14,8 @@
 %bcond_without fips
 
 Name:           nettle
-Version:        3.8
-Release:        3%{?dist}
+Version:        3.9.1
+Release:        1%{?dist}
 Summary:        A low-level cryptographic library
 
 License:        LGPLv3+ or GPLv2+
@@ -26,7 +26,6 @@ Source0:	%{name}-%{version}-hobbled.tar.xz
 Source1:	%{name}-%{version_old}-hobbled.tar.xz
 Source2:	nettle-3.5-remove-ecc-testsuite.patch
 %endif
-Patch:		nettle-3.4-annocheck.patch
 Patch:		nettle-3.8-zeroize-stack.patch
 
 Source100:	gmp-6.2.1.tar.xz
@@ -87,15 +86,11 @@ patch -p1 < %{SOURCE2}
 
 # Disable -ggdb3 which makes debugedit unhappy
 sed s/ggdb3/g/ -i configure
-sed 's/ecc-192.c//g' -i Makefile.in
-sed 's/ecc-224.c//g' -i Makefile.in
 popd
 %endif
 
 # Disable -ggdb3 which makes debugedit unhappy
 sed s/ggdb3/g/ -i configure
-sed 's/ecc-secp192r1.c//g' -i Makefile.in
-sed 's/ecc-secp224r1.c//g' -i Makefile.in
 
 %build
 %if %{with fips}
@@ -108,11 +103,15 @@ popd
 
 autoreconf -ifv
 
+export ASM_FLAGS="-Wa,--generate-missing-build-notes=yes"
+
 %configure --enable-shared --enable-fat \
 %if %{with fips}
 --with-include-path=$PWD/bundled_gmp --with-lib-path=$PWD/bundled_gmp/.libs \
 %endif
 %{nil}
+
+unset ASM_FLAGS
 
 %make_build
 
@@ -205,6 +204,9 @@ make check
 
 
 %changelog
+* Wed Nov  1 2023 Daiki Ueno <dueno@redhat.com> - 3.9.1-1
+- Update to nettle 3.9.1 (RHEL-14890)
+
 * Thu Aug 25 2022 Daiki Ueno <dueno@redhat.com> - 3.8-3
 - Rebuild in new side-tag
 
@@ -213,7 +215,7 @@ make check
 - Zeroize stack allocated intermediate data
 
 * Tue Jun 28 2022 Daiki Ueno <dueno@redhat.com> - 3.8-1
-- Update to nettle 3.8 (#2100350)
+- Update to nettle 3.8 (#1992457)
 
 * Mon Aug 09 2021 Mohan Boddu <mboddu@redhat.com> - 3.7.3-2
 - Rebuilt for IMA sigs, glibc 2.34, aarch64 flags

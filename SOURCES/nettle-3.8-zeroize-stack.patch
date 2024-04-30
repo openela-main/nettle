@@ -1,4 +1,4 @@
-From 894b22e6d851512776bd62e85e749d6950ce16fc Mon Sep 17 00:00:00 2001
+From 24a4cb910a51f35dff89842e8cce27f88e8e78c3 Mon Sep 17 00:00:00 2001
 From: Daiki Ueno <dueno@redhat.com>
 Date: Wed, 24 Aug 2022 17:19:57 +0900
 Subject: [PATCH] Clear any intermediate data allocate on stack
@@ -212,10 +212,10 @@ index 892c0742..a7e0c21d 100644
 +  TMP_CLEAR (k, size + ECC_GOSTDSA_SIGN_ITCH (size));
  }
 diff --git a/hmac.c b/hmac.c
-index 6ac5e11a..0ac33bed 100644
+index ea356970..6a55551b 100644
 --- a/hmac.c
 +++ b/hmac.c
-@@ -55,6 +55,8 @@ hmac_set_key(void *outer, void *inner, void *state,
+@@ -53,6 +53,8 @@ hmac_set_key(void *outer, void *inner, void *state,
  {
    TMP_DECL(pad, uint8_t, NETTLE_MAX_HASH_BLOCK_SIZE);
    TMP_ALLOC(pad, hash->block_size);
@@ -224,7 +224,7 @@ index 6ac5e11a..0ac33bed 100644
    
    hash->init(outer);
    hash->init(inner);
-@@ -64,9 +66,6 @@ hmac_set_key(void *outer, void *inner, void *state,
+@@ -62,9 +64,6 @@ hmac_set_key(void *outer, void *inner, void *state,
        /* Reduce key to the algorithm's hash size. Use the area pointed
         * to by state for the temporary state. */
  
@@ -234,7 +234,7 @@ index 6ac5e11a..0ac33bed 100644
        hash->init(state);
        hash->update(state, key_length, key);
        hash->digest(state, hash->digest_size, digest);
-@@ -88,6 +87,9 @@ hmac_set_key(void *outer, void *inner, void *state,
+@@ -86,6 +85,9 @@ hmac_set_key(void *outer, void *inner, void *state,
    hash->update(inner, hash->block_size, pad);
  
    memcpy(state, inner, hash->context_size);
@@ -244,7 +244,7 @@ index 6ac5e11a..0ac33bed 100644
  }
  
  void
-@@ -114,4 +116,6 @@ hmac_digest(const void *outer, const void *inner, void *state,
+@@ -112,4 +114,6 @@ hmac_digest(const void *outer, const void *inner, void *state,
    hash->digest(state, length, dst);
  
    memcpy(state, inner, hash->context_size);
@@ -252,10 +252,10 @@ index 6ac5e11a..0ac33bed 100644
 +  TMP_CLEAR(digest, hash->digest_size);
  }
 diff --git a/nettle-internal.h b/nettle-internal.h
-index ddc483de..9fc55514 100644
+index c41f3ee0..62b89e11 100644
 --- a/nettle-internal.h
 +++ b/nettle-internal.h
-@@ -72,6 +72,11 @@
+@@ -76,6 +76,11 @@
    do { assert((size_t)(size) <= (sizeof(name))); } while (0)
  #endif 
  
@@ -264,8 +264,8 @@ index ddc483de..9fc55514 100644
 +#define TMP_CLEAR(name, size) (explicit_bzero (name, sizeof (*name) * (size)))
 +#define TMP_CLEAR_ALIGN(name, size) (explicit_bzero (name, size))
 +
- /* Arbitrary limits which apply to systems that don't have alloca */
- #define NETTLE_MAX_HASH_BLOCK_SIZE 128
+ /* Limits that apply to systems that don't have alloca */
+ #define NETTLE_MAX_HASH_BLOCK_SIZE 144  /* For sha3_224*/
  #define NETTLE_MAX_HASH_DIGEST_SIZE 64
 diff --git a/pbkdf2.c b/pbkdf2.c
 index 291d138a..a8ecba5b 100644
@@ -330,5 +330,5 @@ index d28e7b13..8106ebf2 100644
    return ret;
  }
 -- 
-2.37.2
+2.41.0
 

@@ -14,7 +14,7 @@
 %bcond_without fips
 
 Name:           nettle
-Version:        3.9.1
+Version:        3.10.1
 Release:        1%{?dist}
 Summary:        A low-level cryptographic library
 
@@ -204,6 +204,9 @@ make check
 
 
 %changelog
+* Fri Feb 14 2025 Daiki Ueno <dueno@redhat.com> - 3.10.1-1
+- Update to nettle 3.10.1 (RHEL-52740)
+
 * Wed Nov  1 2023 Daiki Ueno <dueno@redhat.com> - 3.9.1-1
 - Update to nettle 3.9.1 (RHEL-14890)
 
